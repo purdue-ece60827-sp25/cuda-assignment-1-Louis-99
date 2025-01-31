@@ -103,6 +103,7 @@ void generatePoints (uint64_t * pSums, uint64_t pSumSize, uint64_t sampleSize) {
 __global__ 
 void reduceCounts (uint64_t * pSums, uint64_t * totals, uint64_t pSumSize, uint64_t reduceSize) {
 	int idx = threadIdx.x + blockDim.x * blockIdx.x;
+	if (idx >= (pSumSize + reduceSize - 1) / reduceSize) return;
 	uint64_t total = 0;
 	uint64_t start_pos = idx * reduceSize;
 	for (uint64_t i = start_pos; i < start_pos + reduceSize && i < pSumSize; i++) {
@@ -127,9 +128,9 @@ int runGpuMCPi (uint64_t generateThreadCount, uint64_t sampleSize,
 	float approxPi = estimatePi(generateThreadCount, sampleSize, 
 		reduceThreadCount, reduceSize);
 	
+	auto tEnd= std::chrono::high_resolution_clock::now();
 	std::cout << "Estimated Pi = " << approxPi << "\n";
 
-	auto tEnd= std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> time_span = (tEnd- tStart);
 	std::cout << "It took " << time_span.count() << " seconds.";
